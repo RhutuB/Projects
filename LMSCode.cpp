@@ -1,25 +1,23 @@
 #include <iostream>
 #include <fstream>
-#include <string>
 #include <iomanip>
-
+#include <cstring>
 using namespace std;
 
 class Book {
-    string bno;
-    string bname;
-    string aname;
+    char bno[6];
+    char bname[50];
+    char aname[20];
+
 public:
     void createBook() {
-        cout << "\nNEW BOOK ENTRY...\n";
-        cout << "ENTER BOOK NO.: ";
+        cout << "\nEnter Book Number: ";
         cin >> bno;
         cin.ignore();
-        cout << "ENTER BOOK NAME: ";
-        getline(cin, bname);
-        cout << "ENTER AUTHOR NAME: ";
-        getline(cin, aname);
-        cout << "\nBook Created.\n";
+        cout << "Enter Book Name: ";
+        cin.getline(bname, 50);
+        cout << "Enter Author Name: ";
+        cin.getline(aname, 20);
     }
 
     void showBook() const {
@@ -29,59 +27,58 @@ public:
     }
 
     void modifyBook() {
-        cout << "Modify Book Name: ";
-        getline(cin, bname);
+        cout << "\nModify Book Name: ";
+        cin.ignore();
+        cin.getline(bname, 50);
         cout << "Modify Author Name: ";
-        getline(cin, aname);
+        cin.getline(aname, 20);
     }
 
-    string getBookNo() const {
+    const char* getBookNo() const {
         return bno;
     }
 
     void report() const {
-        cout << left << setw(10) << bno << setw(30) << bname << setw(20) << aname << endl;
+        cout << setw(10) << bno << setw(30) << bname << setw(30) << aname << endl;
     }
 };
 
 class Student {
-    string admno;
-    string name;
-    string stbno;
-    int token = 0;
+    char admno[6];
+    char name[20];
+    char stbno[6];
+    int token;
+
 public:
     void createStudent() {
-        cout << "\nNEW STUDENT ENTRY...\n";
-        cout << "Enter Admission No.: ";
+        cout << "\nEnter Admission Number: ";
         cin >> admno;
         cin.ignore();
         cout << "Enter Student Name: ";
-        getline(cin, name);
+        cin.getline(name, 20);
         token = 0;
-        stbno = "";
-        cout << "\nStudent Record Created.\n";
+        stbno[0] = '\0';
     }
 
     void showStudent() const {
         cout << "\nAdmission Number: " << admno;
         cout << "\nStudent Name: " << name;
         cout << "\nBooks Issued: " << token;
-        if (token == 1) {
+        if (token == 1)
             cout << "\nBook Number: " << stbno;
-        }
-        cout << endl;
     }
 
     void modifyStudent() {
-        cout << "Modify Student Name: ";
-        getline(cin, name);
+        cout << "\nModify Student Name: ";
+        cin.ignore();
+        cin.getline(name, 20);
     }
 
-    string getAdmNo() const {
+    const char* getAdmno() const {
         return admno;
     }
 
-    string getBookNo() const {
+    const char* getStbno() const {
         return stbno;
     }
 
@@ -97,89 +94,161 @@ public:
         token = 0;
     }
 
-    void setBookNo(const string& bn) {
-        stbno = bn;
+    void setStbno(const char* t) {
+        strcpy(stbno, t);
     }
 
     void report() const {
-        cout << left << setw(10) << admno << setw(20) << name << setw(10) << token << endl;
+        cout << setw(10) << admno << setw(20) << name << setw(10) << token << endl;
     }
 };
 
-// Global file objects and class objects
-Book bk;
-Student st;
-fstream fp, fp1;
-
-// Sample function to write books
 void writeBook() {
-    char ch;
-    do {
-        bk.createBook();
-        fp.open("book.dat", ios::out | ios::app | ios::binary);
-        fp.write(reinterpret_cast<char*>(&bk), sizeof(Book));
-        fp.close();
-        cout << "Do you want to add more records? (y/n): ";
-        cin >> ch;
-        cin.ignore();
-    } while (ch == 'y' || ch == 'Y');
+    Book bk;
+    ofstream outFile("book.dat", ios::binary | ios::app);
+    bk.createBook();
+    outFile.write(reinterpret_cast<char*>(&bk), sizeof(Book));
+    outFile.close();
 }
 
-// Sample function to display all books
-void displayAllBooks() {
-    fp.open("book.dat", ios::in | ios::binary);
-    if (!fp) {
-        cerr << "Cannot open file.\n";
-        return;
-    }
+void writeStudent() {
+    Student st;
+    ofstream outFile("student.dat", ios::binary | ios::app);
+    st.createStudent();
+    outFile.write(reinterpret_cast<char*>(&st), sizeof(Student));
+    outFile.close();
+}
 
+void displayAllBooks() {
+    Book bk;
+    ifstream inFile("book.dat", ios::binary);
     cout << "\n\nBook List:\n";
-    cout << "-------------------------------------------------------------\n";
-    cout << left << setw(10) << "Book No" << setw(30) << "Book Name" << setw(20) << "Author" << endl;
-    cout << "-------------------------------------------------------------\n";
-    while (fp.read(reinterpret_cast<char*>(&bk), sizeof(Book))) {
+    cout << "===============================================================\n";
+    cout << "Book No." << setw(30) << "Book Name" << setw(30) << "Author\n";
+    cout << "===============================================================\n";
+    while (inFile.read(reinterpret_cast<char*>(&bk), sizeof(Book))) {
         bk.report();
     }
-    fp.close();
+    inFile.close();
 }
 
-// You can continue writing similar modern versions of functions like:
-// - writeStudent()
-// - displayAllStudents()
-// - displaySpecificBook()
-// - displaySpecificStudent()
-// - modifyBook()
-// - modifyStudent()
-// - deleteBook()
-// - deleteStudent()
-// - bookIssue()
-// - bookDeposit()
-// - mainMenu()
-// - adminMenu()
+void displayAllStudents() {
+    Student st;
+    ifstream inFile("student.dat", ios::binary);
+    cout << "\n\nStudent List:\n";
+    cout << "===============================================\n";
+    cout << "Adm No." << setw(20) << "Name" << setw(10) << "Token\n";
+    cout << "===============================================\n";
+    while (inFile.read(reinterpret_cast<char*>(&st), sizeof(Student))) {
+        st.report();
+    }
+    inFile.close();
+}
+
+void bookIssue() {
+    Student st;
+    Book bk;
+    char admno[6], bno[6];
+    int found = 0, flag = 0;
+    fstream fs("student.dat", ios::binary | ios::in | ios::out);
+    fstream fb("book.dat", ios::binary | ios::in | ios::out);
+
+    cout << "\nEnter Student Admission Number: ";
+    cin >> admno;
+    while (fs.read(reinterpret_cast<char*>(&st), sizeof(Student)) && !found) {
+        if (strcmp(st.getAdmno(), admno) == 0) {
+            found = 1;
+            if (st.getToken() == 0) {
+                cout << "\nEnter Book Number: ";
+                cin >> bno;
+                while (fb.read(reinterpret_cast<char*>(&bk), sizeof(Book)) && !flag) {
+                    if (strcmp(bk.getBookNo(), bno) == 0) {
+                        flag = 1;
+                        st.addToken();
+                        st.setStbno(bk.getBookNo());
+                        int pos = -1 * static_cast<int>(sizeof(Student));
+                        fs.seekp(pos, ios::cur);
+                        fs.write(reinterpret_cast<char*>(&st), sizeof(Student));
+                        cout << "\nBook Issued Successfully! Return within 15 days.";
+                    }
+                }
+                if (!flag) cout << "\nBook Not Found!";
+            } else {
+                cout << "\nReturn previously issued book first.";
+            }
+        }
+    }
+    if (!found) cout << "\nStudent Record Not Found!";
+    fs.close();
+    fb.close();
+}
+
+void bookDeposit() {
+    Student st;
+    Book bk;
+    char admno[6];
+    int found = 0, flag = 0, days, fine = 0;
+    fstream fs("student.dat", ios::binary | ios::in | ios::out);
+    fstream fb("book.dat", ios::binary | ios::in);
+
+    cout << "\nEnter Student Admission Number: ";
+    cin >> admno;
+    while (fs.read(reinterpret_cast<char*>(&st), sizeof(Student)) && !found) {
+        if (strcmp(st.getAdmno(), admno) == 0) {
+            found = 1;
+            if (st.getToken() == 1) {
+                while (fb.read(reinterpret_cast<char*>(&bk), sizeof(Book)) && !flag) {
+                    if (strcmp(bk.getBookNo(), st.getStbno()) == 0) {
+                        flag = 1;
+                        bk.showBook();
+                        cout << "\nEnter Number of Days Book Was Taken: ";
+                        cin >> days;
+                        if (days > 15) {
+                            fine = (days - 15) * 1;
+                            cout << "\nLate Fine = Rs." << fine;
+                        }
+                        st.resetToken();
+                        int pos = -1 * static_cast<int>(sizeof(Student));
+                        fs.seekp(pos, ios::cur);
+                        fs.write(reinterpret_cast<char*>(&st), sizeof(Student));
+                        cout << "\nBook Deposited Successfully!";
+                    }
+                }
+                if (!flag) cout << "\nBook Not Found!";
+            } else {
+                cout << "\nNo Book Issued!";
+            }
+        }
+    }
+    if (!found) cout << "\nStudent Record Not Found!";
+    fs.close();
+    fb.close();
+}
 
 int main() {
-    int choice;
+    int option;
     do {
-        cout << "\nLIBRARY MANAGEMENT SYSTEM\n";
-        cout << "1. Create Book\n";
-        cout << "2. Display All Books\n";
-        cout << "3. Exit\n";
-        cout << "Enter choice: ";
-        cin >> choice;
-        cin.ignore();
-        switch (choice) {
-            case 1:
-                writeBook();
-                break;
-            case 2:
-                displayAllBooks();
-                break;
-            case 3:
-                cout << "Exiting...\n";
-                break;
-            default:
-                cout << "Invalid choice!\n";
+        cout << "\n\nLibrary Management System";
+        cout << "\n1. Add Book";
+        cout << "\n2. Add Student";
+        cout << "\n3. Display All Books";
+        cout << "\n4. Display All Students";
+        cout << "\n5. Issue Book";
+        cout << "\n6. Deposit Book";
+        cout << "\n7. Exit";
+        cout << "\nEnter your choice: ";
+        cin >> option;
+        switch(option) {
+            case 1: writeBook(); break;
+            case 2: writeStudent(); break;
+            case 3: displayAllBooks(); break;
+            case 4: displayAllStudents(); break;
+            case 5: bookIssue(); break;
+            case 6: bookDeposit(); break;
+            case 7: cout << "Exiting..."; break;
+            default: cout << "\nInvalid choice!"; break;
         }
-    } while (choice != 3);
+    } while(option != 7);
+
     return 0;
 }
